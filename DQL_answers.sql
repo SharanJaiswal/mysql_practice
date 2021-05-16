@@ -42,3 +42,58 @@ SELECT e.empno, e.ename, e.sal, d.dname, d.loc, d.deptno, e.job FROM emp AS e IN
 SELECT e.*, r.grade FROM emp AS e INNER JOIN salgrade AS r ON e.sal BETWEEN r.losal AND r.hisal ORDER BY r.grade ASC;
 SELECT e.*, r.grade FROM emp AS e INNER JOIN salgrade AS r ON e.sal BETWEEN r.losal AND r.hisal WHERE truncate(r.grade, 0) IN (2, 3);
 SELECT e.*, r.grade FROM emp AS e INNER JOIN salgrade AS r ON e.sal BETWEEN r.losal AND r.hisal WHERE (e.job IN ('Analyst', 'Manager')) AND (truncate(r.grade, 0) IN (4, 5));
+SELECT e.empno, e.ename, e.sal, d.dname, r.grade, TIMESTAMPDIFF(YEAR, hiredate, CURDATE()) AS `Exp`, sal*12 AS `Annual Salaray` FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON e.deptno = d.deptno AND e.sal BETWEEN r.losal AND r.hisal WHERE e.deptno IN (10, 20);
+SELECT e.*, d.loc, r.grade FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON (e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal) WHERE (TRUNCATE(r.grade, 0) BETWEEN 2 AND 4) AND (d.dname NOT RLIKE '^OP.*S$') AND (e.job RLIKE 'A') AND (YEAR(hiredate) = '1981' AND DATE_FORMAT(hiredate, '%b') NOT IN ('Mar', 'Sep')) AND NOT (e.sal MOD 100) ORDER BY r.grade ASC;
+SELECT d.*, e.empno, e.ename FROM dept AS d LEFT JOIN emp AS e ON d.deptno = e.deptno;
+SELECT * FROM emp WHERE sal > (SELECT sal FROM emp WHERE ename = 'BLAKE');
+SELECT * FROM emp WHERE job = (SELECT job FROM emp WHERE ename = 'ALLEN');
+SELECT * FROM emp WHERE TO_DAYS(hiredate) > (SELECT TO_DAYS(hiredate) FROM emp WHERE ename = 'KING');
+SELECT e.* FROM emp AS e WHERE EXISTS (SELECT * FROM emp WHERE (e.mgr = empno) AND (TO_DAYS(e.hiredate) > TO_DAYS(hiredate)));
+SELECT * FROM emp WHERE (deptno = 20) AND (job IN (SELECT job FROM emp WHERE deptno = 10));
+SELECT * FROM emp WHERE sal IN (SELECT sal FROM emp WHERE ename IN ('FORD', 'SMITH')) ORDER BY sal DESC;
+SELECT * FROM emp WHERE (job = (SELECT job FROM emp WHERE ename = 'MILLER')) OR (sal > (SELECT sal FROM emp WHERE ename = 'ALLEN'));
+SELECT * FROM emp WHERE sal > (SELECT SUM(sal + IFNULL(comm, 0)) FROM emp WHERE job = 'SALESMAN');
+SELECT e.* FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno WHERE (TO_DAYS(e.hiredate) > (SELECT TO_DAYS(hiredate) FROM emp WHERE ename = 'BLAKE')) AND (d.loc IN ('CHICAGO', 'BOSTON'));
+SELECT e.* FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losaL AND r.hisal)) WHERE (TRUNCATE(r.grade, 0) IN (3, 4)) AND (d.dname IN ('ACCOUNTING', 'RESEARCH')) AND (e.sal > (SELECT sal FROM emp WHERE ename = 'ALLEN')) AND (TIMESTAMPDIFF(MONTH, hiredate, CURDATE()) > (SELECT TIMESTAMPDIFF(MONTH, hiredate, CURDATE()) FROM emp WHERE ename = 'SMITH')) ORDER BY TIMESTAMPDIFF(MONTH, hiredate, CURDATE());
+SELECT * FROM emp WHERE job IN (SELECT job FROM emp WHERE ename IN ('SMITH', 'ALLEN'));
+SELECT e.* FROM emp AS e WHERE EXISTS (SELECT * FROM emp WHERE (e.empno <> empno) AND (e.sal = sal));
+SELECT * FROM emp WHERE (3/4)*sal = ANY (SELECT sal FROM emp WHERE empno IN (SELECT mgr FROM emp));
+SELECT * FROM emp WHERE sal IN (SELECT e.sal FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno WHERE (TIMESTAMPDIFF(YEAR, hiredate, CURDATE()) > 5) AND (d.dname = 'SALES'));
+SELECT * FROM emp WHERE sal IN (SELECT e.sal FROM emp AS e INNER JOIN salgrade AS r ON e.sal BETWEEN r.losal AND r.hisal WHERE TRUNCATE(r.grade, 0) = 2);
+SELECT * FROM emp WHERE sal IN (SELECT e.sal FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.sal BETWEEN r.losal AND r.hisal) AND (e.deptno = d.deptno)) WHERE (TRUNCATE(r.grade, 0) IN (2, 3)) AND (d.dname IN ('SALES', 'OPERATIONS')) AND (RIGHT(YEAR(hiredate), 2) = '89'));
+SELECT job FROM emp WHERE (deptno = 10) AND (job NOT IN (SELECT DISTINCT job FROM emp WHERE deptno =20));
+SELECT * FROM emp WHERE empno NOT IN (SELECT DISTINCT mgr FROM emp WHERE mgr IS NOT NULL);	-- IMP QUERRY: see, we used IS NOT NULL for MGR in sub-query.
+SELECT MAX(sal) FROM emp;
+SELECT * FROM emp WHERE sal = (SELECT MAX(sal) FROM emp);
+SELECT e.* FROM emp AS e INNER JOIN dept AS d ON (e.deptno = d.deptno) WHERE (e.sal = (SELECT MAX(e.sal) FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno WHERE d.dname = 'SALES')) AND (d.dname = 'SALES');
+WITH cte AS (SELECT e.sal AS `grd3_chic_sal`, e.empno AS `grd3_chic_empno` FROM emp AS e INNER JOIN salgrade AS r INNER JOIN dept AS d ON ((e.sal BETWEEN r.losal AND r.hisal) AND (e.deptno = d.deptno)) WHERE (TRUNCATE(r.grade, 0) = 3) AND (d.loc = 'CHICAGO')) SELECT * FROM emp WHERE empno = (SELECT `grd3_chic_empno` FROM cte WHERE `grd3_chic_sal` = (SELECT MAX(`grd3_chic_sal`) FROM cte));
+SELECT * FROM emp WHERE hiredate < (SELECT MAX(hiredate) FROM emp WHERE mgr = (SELECT empno FROM emp WHERE ename = 'KING'));
+SELECT e.* FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) WHERE (d.loc = 'NEW YORK') AND (TRUNCATE(r.grade, 0) BETWEEN 3 AND 5) AND (e.job <> 'PRESIDENT') AND (e.sal > (SELECT MAX(`sal_chic_sales_manager_not_under_king`) FROM (SELECT sal AS `sal_chic_sales_manager_not_under_king` FROM emp WHERE empno IN (SELECT `chic_s_m_eno` FROM (SELECT e.empno AS `chic_s_m_eno`, e.mgr AS `chic_s_m_mgr` FROM emp AS e INNER JOIN dept AS d ON (e.deptno = d.deptno) WHERE (d.loc = 'CHICAGO') AND (e.job IN ('SALESMAN', 'MANAGER'))) AS `chic_sales_manager` WHERE `chic_sales_manager`.`chic_s_m_mgr` <> (SELECT empno FROM emp WHERE ename ='KING'))) AS `max_sal`));
+SELECT * FROM emp WHERE YEAR(hiredate) = '1981' ORDER BY hiredate ASC LIMIT 1;
+SELECT * FROM emp WHERE job IN (SELECT job FROM emp WHERE hiredate IN (SELECT MAX(hiredate) FROM emp WHERE YEAR(hiredate) = '1981')) AND YEAR(hiredate) = '1981';
+SELECT * FROM emp AS e INNER JOIN salgrade AS r ON (e.sal BETWEEN r.losal AND r.hisal) WHERE (e.mgr = (SELECT empno FROM emp WHERE ename = 'KING')) AND (TRUNCATE(r.grade, 0) > 3) ORDER BY e.hiredate ASC LIMIT 1;	-- ANOTHER METHOD: make cte set of cond.s (under king, grade>3). From cte, take min hiredate. For that hiredate, refer cte for empno. For that empno, query emp table.
+SELECT SUM(sal) FROM emp WHERE empno IN (SELECT DISTINCT mgr FROM emp);
+SELECT job, SUM(sal*12) AS `Annual Salary` FROM emp WHERE YEAR(hiredate) = '1981' GROUP BY job;
+SELECT SUM(e.sal) FROM emp AS e INNER JOIN salgrade AS r ON (e.sal BETWEEN r.losal AND r.hisal) WHERE (r.grade = 3);
+SELECT ROUND(AVG(sal), 2) AS `Clerk Average Salary` FROM emp WHERE job = 'CLERK';
+SELECT * FROM emp WHERE (deptno = 20) AND (sal > (SELECT AVG(sal)FROM emp WHERE deptno = 10));
+SELECT d.deptno, COUNT(e.deptno) FROM emp AS e RIGHT JOIN dept AS d ON d.deptno = e.deptno GROUP BY d.deptno;	-- perfect question to demonstarate core cocept of JOINS and GROUP BY. Remember , GROUP BY and DISTINCT on col containing NULL value(s) can return NULL as one DISTINCT grouped/distinct value. Concept: make groups of valid possible values, then see what defines those groups from anothe table, it'll generally be realted to joining points and in another table some null will bw present in that defining column. So, instead of counting the row count for each group, count the no of values from null containing col, for each group. Since  AGG functions consider 0 fro NULL values, count will give 0 even though group/distinct has row head as NULL.
+SELECT e.mgr, COUNT(*) FROM (SELECT DISTINCT mgr FROM emp WHERE mgr IS NOT NULL) AS `mgrs_no` LEFT JOIN emp AS e ON `mgrs_no`.mgr = e.mgr GROUP BY e.mgr ORDER BY e.mgr;
+SELECT d.* FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno GROUP BY e.deptno HAVING COUNT(*) > 1;
+SELECT TRUNCATE(r.grade, 0) AS `Salary Grade`, COUNT(e.sal) AS `Total Employees`, FORMAT(MAX(e.sal), 2) AS `Maximum Salary` FROM salgrade AS r LEFT JOIN emp AS e ON e.sal BETWEEN r.losal AND r.hisal GROUP BY TRUNCATE(r.grade, 0);
+SELECT d.dname, r.grade, COUNT(*) FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) GROUP BY d.dname, r.grade HAVING COUNT(*) > 1;
+SELECT * FROM dept WHERE deptno IN (SELECT deptno FROM emp GROUP BY deptno HAVING COUNT(*) = (SELECT MAX(`emp count`.`count per dept`) FROM (SELECT COUNT(*) AS `count per dept` FROM emp GROUP BY deptno) AS `emp count`));
+SELECT e.* FROM emp AS e RIGHT JOIN emp AS m ON e.mgr = m.empno WHERE m.empno IN (SELECT empno FROM emp WHERE ename = 'JONES');
+SELECT * FROM emp WHERE (sal*1.2) > 3000;
+SELECT e.*, d.dname FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno;
+SELECT e.* FROM emp AS e RIGHT JOIN dept AS d ON (d.deptno = e.deptno) WHERE (d.Dname <> 'SALES');
+SELECT e.ename, d.deptno, d.dname, e.sal, IFNULL(comm, 0) FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno WHERE (e.sal BETWEEN 2000 AND 5000) AND (d.loc = 'CHICAGO');
+SELECT e.* FROM emp AS e RIGHT JOIN emp AS m ON e.mgr = m.empno WHERE e.sal > m.sal;
+SELECT TRUNCATE(r.grade, 0), e.ename FROM emp AS e RIGHT JOIN salgrade AS r ON (e.sal BETWEEN r.losal AND r.hisal) WHERE (e.deptno IN (10, 30)) AND (r.grade <> 4) AND (hiredate < STR_TO_DATE('31-dec-82', '%d-%b-%y'));
+SELECT e.ename, e.job, d.dname, d.loc FROM emp AS e INNER JOIN dept AS d ON (e.deptno = d.deptno) WHERE e.empno IN (SELECT empno FROM emp WHERE job = 'MANAGER');
+SELECT e.*, m.ename AS `Manager` FROM emp AS e INNER JOIN emp AS m ON (e.mgr = m.mgr) WHERE (m.ename = 'JONES');
+SELECT e.ename, e.sal FROM emp AS e INNER JOIN salgrade AS r ON (e.sal BETWEEN r.losal AND r.hisal) WHERE (e.ename = 'FORD') AND (e.sal = r.hisal);
+SELECT e.ename, e.job, d.dname, e.sal, r.grade FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) ORDER BY d.deptno;
+SELECT e.ename, e.job, e.sal, r.grade, d.dname FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) WHERE (e.job <> 'CLERK') ORDER BY e.sal DESC;
+SELECT ename, job FROM emp WHERE empno IN (SELECT empno FROM emp WHERE mgr IS NULL);
+SELECT FROM emp GROUP BY deptno=========95
