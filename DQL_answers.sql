@@ -96,4 +96,4 @@ SELECT e.ename, e.sal FROM emp AS e INNER JOIN salgrade AS r ON (e.sal BETWEEN r
 SELECT e.ename, e.job, d.dname, e.sal, r.grade FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) ORDER BY d.deptno;
 SELECT e.ename, e.job, e.sal, r.grade, d.dname FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) WHERE (e.job <> 'CLERK') ORDER BY e.sal DESC;
 SELECT ename, job FROM emp WHERE empno IN (SELECT empno FROM emp WHERE mgr IS NULL);
-SELECT FROM emp GROUP BY deptno=========95
+SELECT eo.empno FROM (emp AS `eo` RIGHT JOIN dept AS `do`) INNER JOIN (SELECT d.deptno AS `depto`, IFNULL(MAX(e.sal), 0.00) AS `max sal` FROM emp AS e RIGHT JOIN dept AS d ON d.deptno = e.deptno GROUP BY d.deptno) AS `dept max sal` ON ((`eo`.empno = `do`.empno) AND (`dept max sal`.`deptno` = `do`.deptno)) GROUP BY do.deptno HAVING (eo.sal = `dept max sal`.`max sal`);
