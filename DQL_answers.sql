@@ -100,4 +100,4 @@ SELECT * FROM emp WHERE empno IN (SELECT `eo`.empno FROM emp AS `eo` RIGHT JOIN 
 SELECT * FROM emp WHERE sal = ROUND((SELECT (MAX(sal) + MIN(sal))/2 FROM emp), 2);
 SELECT deptno, COUNT(*) FROM emp GROUP BY deptno HAVING COUNT(*) > 3;
 SELECT d.dname, COUNT(*) FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno GROUP BY d.deptno HAVING COUNT(*) > 2;
-SELECT * FROM emp AS e RIGHT JOIN emp AS m ON e.mgr = m.empno WHERE ; -- there might be two cases. first, a manager may not have employee. Second, an employee may not have manager. Here we will consider first case because for that case man.sal > emp.sal always since emp is null. dont use second case because sal.mgr is in predominantly in context.
+SELECT * FROM emp AS e RIGHT JOIN emp AS m ON e.mgr = m.empno WHERE ; -- there might be two cases. First, a manager may not have employee. Second, an employee may not have manager. Here we will consider first case because for that case man.sal > emp.sal always since emp is null. dont use second case because sal.mgr is in predominantly in context.
