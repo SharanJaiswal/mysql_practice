@@ -100,4 +100,57 @@ SELECT * FROM emp WHERE empno IN (SELECT `eo`.empno FROM emp AS `eo` RIGHT JOIN 
 SELECT * FROM emp WHERE sal = ROUND((SELECT (MAX(sal) + MIN(sal))/2 FROM emp), 2);
 SELECT deptno, COUNT(*) FROM emp GROUP BY deptno HAVING COUNT(*) > 3;
 SELECT d.dname, COUNT(*) FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno GROUP BY d.deptno HAVING COUNT(*) > 2;
-SELECT * FROM emp AS e RIGHT JOIN emp AS m ON e.mgr = m.empno WHERE ; -- there might be two cases. First, a manager may not have employee. Second, an employee may not have manager. Here we will consider first case because for that case man.sal > emp.sal always since emp is null. dont use second case because sal.mgr is in predominantly in context.
+SELECT DISTINCT m.*, FORMAT(AVG(e.sal), 2) as `Employee Average Salary` FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno GROUP BY e.mgr HAVING m.sal > AVG(e.sal); -- there might be two cases. First, a manager may not have employee, but here its not possible because emp table is about emp and it tell if emp has manager or not. There is no info table of managers which lists managers. Second, an employee may not have manager. Here we will consider first case because for that case man.sal > emp.sal always since emp is null. dont use second case because sal.mgr is in predominantly in context.
+SELECT ename, sal, IFNULL(comm, 0.00) FROM emp WHERE (sal + IFNULL(comm, 0.00)) >= ANY (SELECT sal FROM emp);
+SELECT * FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno WHERE (e.sal < m.sal)  AND (e.sal > ANY (SELECT sal FROM emp WHERE (empno IN (SELECT mgr FROM emp WHERE mgr IS NOT NULL)) AND (e.mgr <> empno)));
+SELECT e.ename, `avg sal deptwise`.`avg sal` FROM emp AS e INNER JOIN (SELECT AVG(sal) AS `avg sal`, deptno AS `dept` FROM emp GROUP BY deptno) AS `avg sal deptwise` ON `avg sal deptwise`.`dept`= e.deptno;
+SELECT * FROM emp AS e INNER JOIN (SELECT DISTINCT(ROUND(sal + IFNULL(comm, 0.00), 2)) AS `five min sal` FROM emp ORDER BY sal+IFNULL(comm, 0.00) ASC LIMIT 5) AS `min five sal tab` ON ROUND(e.sal + IFNULL(e.comm, 0.00), 2) = `min five sal tab`.`five min sal`;	-- SELECT e.* FROM emp AS e WHERE 5 > (SELECT COUNT(*) FROM emp WHERE e.sal > sal);	first is earneres of least 5 amount/sal. Second is 5 least earners; SUBQUERY will return 0(least salary (pk_indexed)),1,2,3,4
+SELECT * FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno WHERE e.sal > m.sal;
+SELECT * FROM emp WHERE empno IN (SELECT mgr FROM emp WHERE mgr IS NOT NULL) AND mgr NOT IN (SELECT empno FROM emp WHERE job = 'PRESIDENT');
+SELECT e.* FROM emp AS e LEFT JOIN dept AS d ON e.deptno = d.deptno WHERE d.deptno IS NULL;	-- SELECT * FROM emp WHERE deptno NOT IN (SELECT deptno FROM dept); 
+SELECT ename, sal, IFNULL(comm, 0.00), FORMAT(sal + IFNULL(comm, 0.00), 2) FROM emp WHERE sal + IFNULL(comm, 0.00) > ANY (SELECT sal + IFNULL(comm, 0.00) FROM emp);
+SELECT ename FROM emp WHERE TIMESTAMPDIFF(YEAR, hiredate, STR_TO_DATE('31-Dec-89', '%d-%b-%y')) < 20;
+SELECT * FROM emp WHERE ROUND(sal, 0) % 2 = 1;
+SELECT * FROM emp WHERE CHARACTER_LENGTH(ROUND(sal, 0)) = 3;
+SELECT * FROM emp WHERE DATE_FORMAT(hiredate, '%b') = 'Dec';
+SELECT * FROM emp WHERE ename RLIKE 'A';
+SELECT * FROM emp WHERE POSITION(deptno IN ROUND(sal, 0)) <> 0;
+SELECT * FROM emp WHERE LEFT(hiredate, 2) = RIGHT(ROUND(sal, 0), 2);
+SELECT * FROM emp WHERE sal * 0.1 = DATE_FORMAT(hiredate, '%y');
+SELECT CONCAT(LOWER(LEFT(ename, CEIL(CHARACTER_LENGTH(ename) / 2))), UPPER(RIGHT(ename, FLOOR(CHARACTER_LENGTH(ename) / 2)))) FROM emp;
+SELECT d.dname FROM emp AS e RIGHT JOIN dept AS d ON e.deptno = d.deptno GROUP BY d.deptno HAVING COUNT(e.empno) = CHARACTER_LENGTH(d.dname);
+SELECT * FROM emp WHERE DATE_FORMAT(hiredate, '%d') < '15';
+SELECT d.dname FROM dept AS d WHERE CHARACTER_LENGTH(d.dname) IN (SELECT COUNT(*) FROM emp WHERE d.deptno <> deptno GROUP BY deptno);
+SELECT * FROM emp WHERE (empno IN (SELECT mgr FROM emp WHERE mgr IS NULL)) OR (job = 'MANAGER');
+SELECT dname FROM dept WHERE deptno IN (SELECT deptno FROM emp GROUP BY deptno HAVING COUNT(*) = (SELECT MAX(`dept emp count`.`emp cnt deptwise`) FROM (SELECT COUNT(*) AS `emp cnt deptwise` FROM emp GROUP BY deptno) AS `dept emp count`));
+SELECT COUNT(empno) FROM emp WHERE empno IN (SELECT DISTINCT mgr FROM emp WHERE mgr IS NOT NULL);
+SELECT hiredate, GROUP_CONCAT(ename) FROM emp GROUP BY hiredate;
+SELECT e.* FROM emp AS e INNER JOIN salgrade AS r ON e.sal BETWEEN r.losal AND r.hisal WHERE TRUNCATE(r.grade, 0) = 0.1 * (SELECT deptno FROM dept WHERE dname = 'SALES');
+SELECT d.dname FROM emp AS e INNER JOIN dept AS d ON e.deptno = d.deptno GROUP BY e.deptno HAVING COUNT(*) > (SELECT AVG(`emp cnt per dept tbl`.`emp cnt per dept`) FROM (SELECT COUNT(*) AS `emp cnt per dept` FROM emp GROUP BY deptno) AS `emp cnt per dept tbl`);
+SELECT ename FROM emp WHERE empno IN (SELECT mgr FROM emp WHERE mgr IS NOT NULL GROUP BY mgr HAVING COUNT(*) = (SELECT MAX(`emp cnt per mgr tbl`.`emp cnt per mgr`) FROM (SELECT COUNT(*) AS `emp cnt per mgr` FROM emp WHERE mgr IS NOT NULL GROUP BY mgr) AS `emp cnt per mgr tbl`));
+SELECT ename, CONCAT('$', FORMAT(1.15 * sal, 2)) FROM emp;
+SELECT CONCAT_WS(' ', ename, 'is', job) FROM emp;
+SELECT CONCAT(ename, ' (', job, ')') FROM emp;
+SELECT empno, ename, DATE_FORMAT(hiredate, '%M %d, %Y') FROM emp;
+SELECT ename, empno, CASE WHEN (sal > 1500.00) THEN 'JUST SALARY' WHEN (sal = 1500.00) THEN 'ON TARGET' ELSE 'BELOW 1500' END FROM emp;
+-- SELECT DAYOFWEEK(STR_TO_DATE(
+SELECT *, TIMESTAMPDIFF(MONTH, hiredate, CURDATE()) AS `Length of Service (in months)` FROM emp;
+
+SELECT *, IF(DAY(hiredate) < 16, ADDDATE(LAST_DAY(hiredate), INTERVAL -((DAYOFWEEK(LAST_DAY(hiredate)) + 1) MOD 7) DAY), ADDDATE(LAST_DAY(hiredate), INTERVAL (((6 - DAYOFWEEK(LAST_DAY(hiredate))) + 7) % 7) DAY)) FROM emp;
+SELECT CHARACTER_LENGTH(REPLACE(ename, ' ', '')), CHARACTER_LENGTH(ename) FROM emp;
+SELECT COUNT(*) FROM emp WHERE SUBSTRING_INDEX(sal, '.', -1) <> 0;
+SELECT * FROM emp WHERE POSITION(MID(deptno, 1, 1) IN sal) AND POSITION(MID(deptno, 2, 1) IN sal);
+SELECT DISTINCT m.* FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno WHERE e.sal > m.sal;
+SELECT * FROM emp WHERE mgr IN (SELECT empno FROM emp WHERE ename = 'BLAKE');
+SELECT * FROM emp WHERE empno IN (SELECT mgr FROM emp WHERE mgr IS NOT NULL);
+SELECT e.*, m.ename AS `Manager Name` FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno WHERE e.mgr IS NOT NULL AND m.ename = 'JONES';
+
+SELECT COUNT(*) FROM emp WHERE empno IN (SELECT DISTINCT mgr FROM emp WHERE mgr IS NOT NULL);	-- SELECT COUNT(*) FROM emp WHERE job = 'MANAGER';
+SELECT ROUND(AVG(sal), 2) AS `Average Salary`, ROUND(AVG(sal + IFNULL(comm, 0)), 2) AS `Average Total Renumeration`FROM emp GROUP BY job;
+SELECT empno, COUNT(*) FROM emp GROUP BY empno;
+SELECT * FROM emp WHERE sal < 1000 ORDER BY sal ASC;
+SELECT e.ename, e.job, e.sal * 12 AS `Annual Salary`, e.deptno, d.dname, TRUNCATE(r.grade, 0) FROM emp AS e INNER JOIN dept AS d INNER JOIN salgrade AS r ON ((e.deptno = d.deptno) AND (e.sal BETWEEN r.losal AND r.hisal)) WHERE (e.sal * 12 >= 36000) OR (e.job <> 'CLERK');
+-- 149===================SELECT j1.job FROM emp AS j1, emp AS j2 WHERE j1.job = j2.job
+SELECT e.* FROM emp AS e INNER JOIN emp AS m ON e.mgr = m.empno WHERE e.hiredate < m.hiredate;
+SELECT e.ename, e.empno, m.ename, m.empno FROM emp AS e LEFT JOIN emp AS m ON e.mgr = m.empno;
+-- ====> 152
