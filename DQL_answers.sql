@@ -184,7 +184,7 @@ SELECT empno, ename, hiredate, CURDATE(), TIMESTAMPDIFF(MONTH, hiredate, CURDATE
 SELECT * FROM emp WHERE TIMESTAMPDIFF(YEAR, hiredate, CURDATE()) > 10;
 -- =========> 181
 SELECT * FROM emp WHERE job = 'MANAGER' OR empno IN (SELECT mgr FROM emp WHERE mgr IS NOT NULL);
-SELECT * FROM emp WHERE job IN ('CKERK', 'MANAGER');
+SELECT * FROM emp WHERE job IN ('CLERK', 'MANAGER');
 SELECT * FROM emp WHERE DATE_FORMAT(hiredate, '%e %b %y') IN ('1 MAY 81', '17 nov 81', '30 dec 81');
 SELECT * FROM emp WHERE YEAR(hiredate) = '1981';
 SELECT * FROM emp WHERE sal * 12 BETWEEN 23000 AND 40000;
