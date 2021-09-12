@@ -64,4 +64,3 @@ SET FOREIGN_KEY_CHECKS = 1;
 SELECT * FROM dept;
 SELECT * FROM emp;
 SELECT * FROM salgrade;
-

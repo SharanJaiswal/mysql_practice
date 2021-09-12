@@ -1,7 +1,7 @@
 SELECT * FROM emp;
 SELECT DISTINCT job FROM emp;
 SELECT * FROM emp ORDER BY sal ASC;
-SELECT * FROM emp ORDER BY deptno ASC, job DESC;
+SELECT * FROM emp ORDER BY deptno ASC, job DESC;0
 SELECT DISTINCT job FROM emp ORDER BY job DESC;
 SELECT * FROM emp WHERE empno IN (SELECT mgr FROM emp);
 SELECT * FROM emp WHERE YEAR(hiredate) < '1981';
