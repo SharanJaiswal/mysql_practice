@@ -1,6 +1,8 @@
 # mysql_practice
 Here are few different types of query questions along with their SQL statement, working in MySQL.
 
+https://dev.to/gsudarshan/how-to-install-mysql-and-workbench-on-ubuntu-20-04-localhost-5828
+
 # Points for installing mysql in ubuntu:
 
 https://docs.rackspace.com/support/how-to/install-mysql-server-on-the-ubuntu-operating-system/
